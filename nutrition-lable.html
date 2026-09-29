@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Nutrition Facts</title></head>
+<body>
+
+<h1>Nutrition Facts</h1>
+<p>Drag this button to your bookmarks bar, then click it on any website:</p>
+<a id="button" href="#">Nutrition Facts</a>
+
+<!-- We're making a nutrition label for a website! -->
+<!-- First, think of 3 things you care about on a site -->
+<!-- Then give each of them a description -->
+<!-- For example (Time: wasting a lot) -->
+<!-- ✏️ Paste your 3 things here 👇 -->
+<div id="label" hidden>
+  <b style="font-size:24px">Nutrition Facts</b>
+  <hr>
+  <b>XX:</b> xxxx<br>
+  <b>XX:</b> xxxx<br>
+  <b>XX:</b> xxxx
+</div>
+
+<!-- You don't need to change anything below! You can now download and open it in your browser -->
+<script>
+  function run(html) {
+    
+    const label = document.createElement("div");
+    label.innerHTML = html;
+    label.style = "position:fixed; left:0; top:0; z-index:99999; background:white; color:black; border:3px solid black; padding:10px; font:16px Arial";
+    document.body.append(label);
+
+    
+    let x = 50, y = 50, dx = 2, dy = 2;
+    function move() {
+      x += dx;
+      y += dy;
+      if (x < 0 || x + label.offsetWidth > innerWidth) dx = -dx;
+      if (y < 0 || y + label.offsetHeight > innerHeight) dy = -dy;
+      label.style.left = x + "px";
+      label.style.top = y + "px";
+      requestAnimationFrame(move);
+    }
+    move();
+  }
+
+  const html = document.getElementById("label").innerHTML;
+  document.getElementById("button").href = "javascript:" + encodeURIComponent("(" + run + ")(" + JSON.stringify(html) + ")");
+
+  run(html);
+</script>
+
+</body>
+</html>
