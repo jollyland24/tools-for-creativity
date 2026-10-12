@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Super Duper Machine</title>
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+
+<!-- wobbles every line a little, so the drawings look hand-made -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="rough">
+    <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.5"/>
+  </filter>
+</svg>
+
+<!-- scribbled backdrop: sun, clouds, hills, ground -->
+<svg id="scene" viewBox="0 0 100 100" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+  <circle class="solid" cx="80" cy="26" r="8"/>
+  <path d="M80 12 V8 M80 40 V44 M66 26 H62 M94 26 H98 M70 16 L67 13 M90 16 L93 13 M70 36 L67 39 M90 36 L93 39"/>
+  <path class="solid" d="M10 22 q4 -7 9 -1 q5 -6 10 0 q6 0 5 5 h-28 q-4 -2 4 -4Z"/>
+  <path class="solid" d="M42 12 q3 -5 7 0 q4 -4 8 0 q4 1 3 4 h-21 q-3 -2 3 -4Z"/>
+  <path class="solid" d="M0 62 C8 52 18 44 28 54 S44 62 54 52 S72 44 84 54 S96 58 100 54 V100 H0Z"/>
+  <path d="M0 62 H100"/>
+  <path d="M6 72 l6 -3 M22 80 l8 -3 M44 70 l6 -2 M62 78 l9 -3 M80 70 l7 -2 M92 84 l6 -2 M12 90 l9 -3 M40 88 l7 -2 M68 92 l8 -3"/>
+</svg>
+
+<button id="menu-toggle" type="button" aria-expanded="false" aria-controls="drawer">☰ Machines</button>
+
+<aside id="drawer" aria-label="Machines">
+  <h2>Machines</h2>
+  <ul id="preset-list"></ul>
+
+  <h3>Mine</h3>
+  <p id="my-empty"><small>Nothing yet.</small></p>
+  <ul id="my-list"></ul>
+
+  <button id="make" type="button" class="primary">+ Make your own</button>
+</aside>
+
+<main>
+  <h1 id="logo">
+    <img src="/media/super.png" alt="Super">
+    <img src="/media/duper.png" alt="Duper">
+    <img src="/media/machine.png" alt="Machine">
+  </h1>
+
+  <div id="stage">
+    <svg id="tree" viewBox="0 0 100 120" aria-hidden="true">
+      <path d="M46 118 C45 92 49 70 47 46"/>
+      <path d="M55 118 C54 92 58 70 54 46"/>
+      <path d="M50 46 C30 22 12 28 4 46"/>
+      <path d="M50 46 C34 34 24 48 20 66"/>
+      <path d="M50 46 C46 22 54 8 66 2"/>
+      <path d="M50 46 C62 24 82 22 96 34"/>
+      <path d="M50 46 C66 38 78 52 80 68"/>
+      <path d="M50 46 C36 40 26 38 14 40"/>
+    </svg>
+
+    <button id="machine" class="on-ground" type="button" aria-label="The machine"></button>
+    <div id="bubble" hidden></div>
+  </div>
+
+  <div id="blocks" aria-label="What this machine is made of"></div>
+
+  <section id="controls">
+    <h2 id="machine-name"></h2>
+    <p id="help"></p>
+    <p id="status" role="status"></p>
+    <p id="readout" hidden>Reading: <output id="reading">0</output></p>
+    <p class="row">
+      <button id="start" type="button" class="primary">Start</button>
+      <button id="simulate" type="button">Simulate</button>
+    </p>
+  </section>
+</main>
+
+<dialog id="builder">
+  <h2>Make your own</h2>
+
+  <label>Name <input id="b-name" maxlength="24" placeholder="My machine"></label>
+
+  <p>Draw its body <small>(optional)</small></p>
+  <canvas id="pad" width="280" height="280"></canvas>
+  <p><button id="b-clear" type="button">Clear</button></p>
+
+  <label>Sensor <select id="b-sensor"></select></label>
+  <label>Action <select id="b-action"></select></label>
+  <label id="b-text-row" hidden>Words <input id="b-text" maxlength="30" placeholder="Hello!"></label>
+
+  <menu>
+    <button id="b-save" type="button" class="primary">Save</button>
+    <button id="b-cancel" type="button">Cancel</button>
+  </menu>
+</dialog>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
