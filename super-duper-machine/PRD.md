@@ -38,22 +38,7 @@ superdupermachine the three words can be closer and clamp the size to make them 
 
 ---
 
-TODO: coolify setup
-
-Push the code. The files are untracked and the remote is
-     github.com/jollyland24/tools-for-creativity. Say the word
-     and I'll commit them on playtesting/superdupermachine and
-     push. I'm not doing that unasked.
-  2. Create the app in Coolify. Use New Resource, then
-     Public/Private Repository, pick the repo and the
-     playtesting/superdupermachine branch.
-  3. Set the build pack to Dockerfile. Set Base Directory to
-     /super-duper-machine. Set the port to 80.
-  4. Set a domain. Coolify issues the HTTPS cert, which the
-     motion sensors require. Without HTTPS the Start button
-     will report no sensor on the phone.
-  5. Deploy, then open the URL on your phone and run the drop
-     test.
+~~deployed on vercel~~
 
 TODO: iterate on the ui
 
@@ -62,12 +47,12 @@ Iteration on functionality (continue from '5.' in the first function description
   it looks like even 3d can work, what i dont like is how it is still very simulated and it doesn't say much why 'super duper', maybe the preset is not crazy enough 
 
   ideas
-  - less distraction from the style, use more black and white but with the same geographic setup
-  - give users more presets: play drum
-  - show the blocks underneath the apple drop
-  - use scribble style instead of this intimidating 3d style that makes you wanna be cool rather than creative
-  - simpler actions in the user self creation part (also make it a side bar or something ppl can access whenever)
-  - each super duper machine is an apple doesn't make sense, user should be able to give the form to the machine, but perhaps it should have some kind of preset form that is for example the combination of some "sensor/action" visualized
-  - perhaps the ui should be more like what i had in mind like noodley, stretchy?, maybe a bit of late 80s but it is a recreation, less coatic
+     - less distraction from the style, use more black and white but with the same geographic setup
+     - give users more presets: play drum
+     - show the blocks underneath the apple drop
+     - use scribble style instead of this intimidating 3d style that makes you wanna be cool rather than creative
+     - simpler actions in the user self creation part (also make it a side bar or something ppl can access whenever)
+     - each super duper machine is an apple doesn't make sense, user should be able to give the form to the machine, but perhaps it should have some kind of preset form that is for example the combination of some "sensor/action" visualized
+     - perhaps the ui should be more like what i had in mind like noodley, stretchy?, maybe a bit of late 80s but it is a recreation, less coatic
+      - no it will be simple, and user first draw like a circle for "machine body", and for some sensors, user can add preset or draw themselves and define like combined sensor/text/audio effect
 
-   - no it will be simple, and user first draw like a circle for "machine body", and for some sensors, user can add preset or draw themselves and define like combined sensor/text/audio effect

@@ -9,7 +9,7 @@ export function createPad(canvas) {
   let current = null;
 
   function style() {
-    g.lineWidth = 3;
+    g.lineWidth = 8; // about as thick as the finished machine outline
     g.lineCap = "round";
     g.lineJoin = "round";
     g.strokeStyle = "#111";

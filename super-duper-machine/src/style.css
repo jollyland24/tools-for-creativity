@@ -1,45 +1,35 @@
-/* Black and white, hand-drawn. Same landscape as before (sun, hills, a tree, ground),
-   but quiet, so the machines are the interesting part. */
+/* Yellow paper, black ink, hand-drawn. Two screens: the stack of boxes you build a machine
+   with, and the grid of machines. */
+
+@font-face {
+  font-family: "Cirrus Cumulus";
+  src: url("/fonts/CirrusCumulus.ttf") format("truetype");
+  font-display: swap;
+}
 
 :root {
   --ink: #111;
   --paper: #fff;
-  --hand: "Bradley Hand", "Segoe Print", "Comic Sans MS", "Marker Felt", cursive;
+  --yellow: #fff472;
+  --hand: "Stack Sans Notch", "Cirrus Cumulus", "Bradley Hand", "Segoe Print", "Comic Sans MS", "Marker Felt", cursive;
   --wobble: 255px 15px 225px 15px / 15px 225px 15px 255px; /* uneven corners = hand-drawn box */
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 
 html, body { height: 100%; margin: 0; }
 
+/* the title on top, then whichever screen is showing fills the rest */
 body {
+  display: flex;
+  flex-direction: column;
   font: 17px/1.3 var(--hand);
   color: var(--ink);
-  background: var(--paper);
+  background: var(--yellow);
 }
 
 button, input, select { font: inherit; color: inherit; }
-
-/* ---------- scribbled scenery ---------- */
-
-#scene {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-  filter: url(#rough);
-}
-
-#scene *, #tree *, #machine svg * {
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 2.5px;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
-}
-#scene .solid { fill: var(--paper); } /* sun, clouds and hills hide whatever is behind them */
 
 /* ---------- buttons, hand-drawn style ---------- */
 
@@ -55,83 +45,236 @@ button:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink)
 button:disabled { opacity: 0.5; cursor: default; }
 button.primary { background: var(--ink); color: var(--paper); }
 
-/* ---------- page ---------- */
+.row { display: flex; justify-content: center; gap: 10px; }
 
-main {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 44px 12px 16px;
-}
+/* ---------- screen 1: the stack ---------- */
 
-/* the logo keeps its colours off the page: pure black and white */
-#logo {
-  --w: clamp(100px, min(40vw, 18vh), 240px);
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-/* Each PNG carries empty padding. --r is its aspect ratio, --t/--b the padding to trim,
-   --k a width multiplier so the three words look equally big. */
-#logo img {
-  display: block;
-  width: calc(var(--w) * var(--k, 1));
-  height: auto;
-  margin-block:
-    calc(var(--w) * var(--k, 1) * var(--r) * var(--t) * -1)
-    calc(var(--w) * var(--k, 1) * var(--r) * var(--b) * -1);
-  filter: grayscale(1) contrast(1.8) brightness(0.75);
-}
-#logo img:nth-child(1) { --r: 0.576; --t: 0.08; --b: 0.19; }
-#logo img:nth-child(2) { --r: 0.786; --t: 0.17; --b: 0.17; }
-#logo img:nth-child(3) { --r: 0.291; --t: 0.14; --b: 0.27; --k: 1.5; }
-
-/* ---------- stage: tree + machine ---------- */
-
-#stage {
-  position: relative;
+#make-screen {
   flex: 1;
-  width: min(420px, 92vw);
-  min-height: 240px;
-  max-height: 52vh;
-  margin: 8px 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-#tree {
+/* the title is only the top of its PNG (text spans y 1% to 6% of 3692px), so cut it off at 240px */
+#title {
+  flex: none;
+  width: 100%;
+  aspect-ratio: 2388 / 240;
+  margin: 0;
+  overflow: hidden;
+}
+#title a { display: block; }
+#title a:focus-visible { outline: 3px dashed var(--ink); outline-offset: -3px; }
+#title img { display: block; width: 100%; height: auto; }
+
+/* The boxes sit in the middle of the 2388 x 3692 frame. The art shows only the part from
+   15% to 97% of it: 2388 x 3027 px (3692 x 0.82). It is as tall as the free space and never
+   wider than the screen. */
+.cover-stage {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  container-type: size;
+}
+.cover-art {
+  position: relative;
+  width: min(100cqw, 100cqh * 2388 / 3027);
+  aspect-ratio: 2388 / 3027;
+  overflow: hidden;
+}
+.frame {
   position: absolute;
-  bottom: 0;
-  left: 50%;
-  height: 100%;
-  aspect-ratio: 5 / 6;
-  transform: translateX(-50%);
+  left: 0;
+  top: 0;
+  width: 100%;
+  aspect-ratio: 2388 / 3692;
+  transform: translateY(-15%); /* of its own height */
+}
+
+/* six 2388 x 3692 PNGs sit on top of each other */
+.layer {
+  position: absolute;
+  inset: 0;
+  margin: 0;
   pointer-events: none;
-  filter: url(#rough);
+}
+.layer img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: calc(var(--x) + var(--w) / 2) calc(var(--y) + var(--h) / 2);
+  transition: transform 0.15s;
 }
 
-#machine {
+/* a see-through button over the box it opens */
+.hit {
   position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  height: var(--h);
   padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  box-shadow: none;
+  pointer-events: auto;
+}
+.hit:active { transform: none; }
+.hit:focus-visible { outline: 3px dashed var(--ink); outline-offset: 2px; }
+.layer:has(.hit:hover, .hit:focus-visible) img { transform: rotate(-1.2deg) scale(1.03); }
+
+/* a tick on every box you have set up */
+.layer.done .hit::after {
+  content: "✓";
+  position: absolute;
+  top: 6%;
+  right: 4%;
+  display: grid;
+  place-items: center;
+  width: 1.7em;
+  height: 1.7em;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  font-size: clamp(14px, 3.4cqh, 22px);
+  line-height: 1;
+}
+
+#make-bar {
+  width: min(420px, 100%);
+  padding: 4px 12px calc(10px + env(safe-area-inset-bottom));
+  text-align: center;
+}
+#make-hint { margin: 0 0 6px; min-height: 1.3em; }
+#make-name {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: var(--paper);
+}
+
+/* ---------- screen 2: the grid ---------- */
+
+#grid-screen {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px 12px calc(16px + env(safe-area-inset-bottom));
+}
+#grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 20px 16px;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+#grid li { display: flex; justify-content: center; }
+
+/* a machine in the grid is just its drawing on the yellow paper */
+.thumb {
+  width: min(100%, 150px);
+  padding: 8px;
   border: 0;
   border-radius: 0;
   background: none;
   box-shadow: none;
 }
-#machine.in-tree { left: 50%; top: 34%; width: 13%; }
-#machine.on-ground { left: 4%; bottom: 4%; width: 24%; } /* bottom: see GROUND_GAP in main.js */
+.thumb:active { transform: none; box-shadow: none; }
+.thumb:focus-visible { outline: 3px dashed var(--ink); outline-offset: 2px; }
+.thumb svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: url(#rough);
+  transition: transform 0.15s;
+}
+.thumb:hover svg, .thumb:focus-visible svg { transform: rotate(-3deg) scale(1.06); }
+.thumb.fresh { animation: pop 0.5s ease-out; }
 
-#machine svg {
+/* shapes are filled with the paper they sit on, so lines behind them stay hidden */
+.thumb svg * { fill: var(--yellow); }
+.body svg * { fill: var(--paper); }
+/* thick brush lines like the PNGs; the width is in drawing units, so it grows with the drawing */
+.thumb svg *, .body svg * {
+  stroke: #1a1a1a;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- the machine dialog ---------- */
+
+#dlg-machine {
+  overflow: visible; /* the apple falls out of the dialog's box */
+  text-align: center;
+}
+#dlg-machine h2 { margin: 0; }
+#dlg-machine p { margin: 4px 0; }
+#m-detail small { opacity: 0.6; }
+#m-status { min-height: 2.6em; font-size: 0.9em; }
+#dlg-machine menu { justify-content: flex-start; }
+#dlg-machine #m-status input { width: 100%; }
+
+#dlg-import { text-align: center; overflow: visible; }
+#dlg-import h2 { margin: 0; }
+#dlg-import p { margin: 4px 0; }
+#dlg-import small { opacity: 0.6; }
+#dlg-import menu { justify-content: space-between; }
+
+#m-setup { margin: 10px 0 0; text-align: left; }
+#m-setup summary { cursor: pointer; text-align: center; }
+#m-setup dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  margin: 8px 0 0;
+  font-size: 0.85em;
+}
+#m-setup dt { opacity: 0.6; }
+#m-setup dd { margin: 0; }
+#m-close { margin-left: auto; } /* stays on the right when there is no Delete */
+
+.m-stage {
+  position: relative;
+  width: min(55%, 200px);
+  margin: 12px auto 8px;
+}
+/* the machine itself; also the thing you tap for the Touch sensor */
+.body { width: 100%; }
+.body svg {
   display: block;
   width: 100%;
   height: auto;
   overflow: visible;
   filter: url(#rough);
 }
-#machine svg * { fill: var(--paper); stroke-width: 3px; }
+.body.bump { animation: bump 0.25s ease-out; }
+.body.fallen { animation: fall 1.4s cubic-bezier(0.5, 0, 1, 0.6); }
 
-#machine.bump { animation: bump 0.25s ease-out; }
-#machine.fallen { animation: fall 0.9s cubic-bezier(0.5, 0, 1, 0.6) forwards; pointer-events: none; }
+.bubble {
+  position: absolute;
+  left: 50%;
+  top: -14px;
+  transform: translateX(-50%);
+  padding: 2px 10px;
+  border: 2px solid var(--ink);
+  border-radius: var(--wobble);
+  background: var(--paper);
+  white-space: nowrap;
+  pointer-events: none;
+}
 
 @keyframes bump {
   0%   { transform: scale(1.18, 0.8); }
@@ -139,89 +282,17 @@ main {
   100% { transform: scale(1); }
 }
 @keyframes fall {
-  from { transform: translateY(0); }
-  to   { transform: translateY(var(--fall, 200px)); }
+  0%   { transform: translateY(0); opacity: 1; }
+  60%  { transform: translateY(80%); opacity: 1; }
+  100% { transform: translateY(80%); opacity: 0; }
+}
+@keyframes pop {
+  0%   { transform: scale(0.7); }
+  70%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 
-#bubble {
-  position: absolute;
-  left: 50%;
-  top: 4%;
-  transform: translateX(-50%);
-  padding: 4px 12px;
-  border: 2px solid var(--ink);
-  border-radius: var(--wobble);
-  background: var(--paper);
-  white-space: nowrap;
-}
-
-/* ---------- blocks ---------- */
-
-#blocks {
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  width: min(560px, 96vw);
-}
-#blocks .arrow { align-self: center; font-size: 22px; }
-
-.block {
-  flex: 1 1 120px;
-  max-width: 190px;
-  padding: 6px 10px;
-  border: 2px solid var(--ink);
-  border-radius: var(--wobble);
-  background: var(--paper);
-  box-shadow: 2px 2px 0 var(--ink);
-  text-align: center;
-}
-.block small { display: block; opacity: 0.6; }
-.block.fire { background: var(--ink); color: var(--paper); }
-
-/* ---------- controls ---------- */
-
-#controls {
-  width: min(420px, 92vw);
-  margin-top: 12px;
-  padding: 8px 14px;
-  border: 2px solid var(--ink);
-  border-radius: var(--wobble);
-  background: var(--paper);
-  text-align: center;
-}
-#controls h2 { margin: 0 0 2px; }
-#controls p { margin: 4px 0; }
-.row { display: flex; justify-content: center; gap: 10px; }
-
-/* ---------- drawer ---------- */
-
-#menu-toggle { position: fixed; z-index: 11; top: 8px; left: 8px; }
-
-#drawer {
-  position: fixed;
-  z-index: 10;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: min(300px, 85vw);
-  padding: 52px 14px 14px;
-  overflow: auto;
-  background: var(--paper);
-  border-right: 3px solid var(--ink);
-  transform: translateX(-105%);
-  transition: transform 0.2s;
-}
-#drawer.open { transform: none; }
-#drawer h2, #drawer h3 { margin: 4px 0; }
-#drawer ul { list-style: none; margin: 0 0 12px; padding: 0; }
-#drawer li { display: flex; gap: 6px; margin-bottom: 8px; }
-#drawer .pick { flex: 1; text-align: left; }
-#drawer .pick small { display: block; opacity: 0.6; }
-#drawer .remove { padding: 0 10px; }
-
-/* ---------- dialog ---------- */
+/* ---------- dialogs ---------- */
 
 dialog {
   width: min(380px, 92vw);
@@ -232,21 +303,52 @@ dialog {
   color: var(--ink);
   font: inherit;
 }
-dialog::backdrop { background: rgba(255, 255, 255, 0.7); }
+dialog::backdrop { background: rgba(255, 244, 114, 0.75); }
 dialog h2 { margin: 0 0 8px; }
+dialog p { margin: 6px 0; }
 dialog label { display: block; margin: 8px 0; }
-dialog input, dialog select {
+dialog input:not([type]), dialog input[type="text"] {
   width: 100%;
   padding: 4px 8px;
   border: 2px solid var(--ink);
   border-radius: 6px;
   background: var(--paper);
 }
+dialog select {
+  width: 100%;
+  padding: 4px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: var(--paper);
+}
+dialog input[type="range"] { width: 100%; accent-color: var(--ink); }
+.tune { margin: 12px 0; }
+.tune label { display: flex; justify-content: space-between; gap: 8px; margin: 0; }
+.tune output { opacity: 0.7; }
+.tune .scale { margin: 0; }
 dialog menu { display: flex; gap: 8px; padding: 0; margin: 12px 0 0; }
+.scale { display: flex; justify-content: space-between; }
+#e-url-hint { min-height: 1.3em; margin: 0; }
+
+.options { display: grid; gap: 6px; }
+.option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 10px;
+  border: 2px solid var(--ink);
+  border-radius: var(--wobble);
+  cursor: pointer;
+}
+.option:has(input:checked) { background: var(--ink); color: var(--paper); }
+.option input { accent-color: var(--paper); }
+.option small { display: block; opacity: 0.7; }
+
 #pad {
   display: block;
   width: 100%;
-  max-width: min(280px, 34vh); /* keeps Save reachable on short phone screens */
+  max-width: min(280px, 34vh); /* keeps Done reachable on short phone screens */
   aspect-ratio: 1;
   margin: 0 auto;
   border: 2px dashed var(--ink);
@@ -257,6 +359,8 @@ dialog menu { display: flex; gap: 8px; padding: 0; margin: 12px 0 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #drawer { transition: none; }
-  #machine.bump { animation: none; }
+  .layer img { transition: none; }
+  .body.bump, .thumb.fresh { animation: none; }
+  .thumb svg { transition: none; }
+  .body.fallen { animation: none; opacity: 0.3; }
 }
