@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Super Duper Machine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Stack+Sans+Notch:wght@200..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
@@ -16,84 +19,145 @@
   </filter>
 </svg>
 
-<!-- scribbled backdrop: sun, clouds, hills, ground -->
-<svg id="scene" viewBox="0 0 100 100" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-  <circle class="solid" cx="80" cy="26" r="8"/>
-  <path d="M80 12 V8 M80 40 V44 M66 26 H62 M94 26 H98 M70 16 L67 13 M90 16 L93 13 M70 36 L67 39 M90 36 L93 39"/>
-  <path class="solid" d="M10 22 q4 -7 9 -1 q5 -6 10 0 q6 0 5 5 h-28 q-4 -2 4 -4Z"/>
-  <path class="solid" d="M42 12 q3 -5 7 0 q4 -4 8 0 q4 1 3 4 h-21 q-3 -2 3 -4Z"/>
-  <path class="solid" d="M0 62 C8 52 18 44 28 54 S44 62 54 52 S72 44 84 54 S96 58 100 54 V100 H0Z"/>
-  <path d="M0 62 H100"/>
-  <path d="M6 72 l6 -3 M22 80 l8 -3 M44 70 l6 -2 M62 78 l9 -3 M80 70 l7 -2 M92 84 l6 -2 M12 90 l9 -3 M40 88 l7 -2 M68 92 l8 -3"/>
-</svg>
+<!-- Screen 1: the stack of boxes. Each box is a full-size PNG layer; its button sits on the box
+     (--x/--y/--w/--h = the layer's drawn area as % of the 2388 x 3692 frame, which is cropped to
+     the boxes). Layers are listed
+     bottom to top, so a box drawn over another one also catches the clicks. -->
+<!-- the title is the top strip of sdm-title.png, shown across the full width of both screens;
+     on the machines screen it is the way back to the stack -->
+<h1 id="title"><a href="#make" title="Make a machine"><img src="/media/sdm-title.png" alt="Super Duper Machine"></a></h1>
 
-<button id="menu-toggle" type="button" aria-expanded="false" aria-controls="drawer">☰ Machines</button>
-
-<aside id="drawer" aria-label="Machines">
-  <h2>Machines</h2>
-  <ul id="preset-list"></ul>
-
-  <h3>Mine</h3>
-  <p id="my-empty"><small>Nothing yet.</small></p>
-  <ul id="my-list"></ul>
-
-  <button id="make" type="button" class="primary">+ Make your own</button>
-</aside>
-
-<main>
-  <h1 id="logo">
-    <img src="/media/super.png" alt="Super">
-    <img src="/media/duper.png" alt="Duper">
-    <img src="/media/machine.png" alt="Machine">
-  </h1>
-
-  <div id="stage">
-    <svg id="tree" viewBox="0 0 100 120" aria-hidden="true">
-      <path d="M46 118 C45 92 49 70 47 46"/>
-      <path d="M55 118 C54 92 58 70 54 46"/>
-      <path d="M50 46 C30 22 12 28 4 46"/>
-      <path d="M50 46 C34 34 24 48 20 66"/>
-      <path d="M50 46 C46 22 54 8 66 2"/>
-      <path d="M50 46 C62 24 82 22 96 34"/>
-      <path d="M50 46 C66 38 78 52 80 68"/>
-      <path d="M50 46 C36 40 26 38 14 40"/>
-    </svg>
-
-    <button id="machine" class="on-ground" type="button" aria-label="The machine"></button>
-    <div id="bubble" hidden></div>
+<section id="make-screen">
+  <div class="cover-stage">
+    <div class="cover-art" role="group" aria-label="Build a machine: tap a box to set it up">
+      <div class="frame">
+        <div class="layer" style="--x:27.8%;--y:74.1%;--w:54.6%;--h:21.5%">
+          <img src="/media/sdm-customize.png" alt="">
+          <button type="button" class="hit" data-box="customize" aria-label="Look: draw its body"></button>
+        </div>
+        <div class="layer" style="--x:23.1%;--y:67.2%;--w:53.6%;--h:9.5%">
+          <img src="/media/sdm-param.png" alt="">
+          <button type="button" class="hit" data-box="param" aria-label="Slider: tune how it reacts"></button>
+        </div>
+        <div class="layer" style="--x:29.5%;--y:52.9%;--w:39.8%;--h:16%">
+          <img src="/media/sdm-sound.png" alt="">
+          <button type="button" class="hit" data-box="sound" aria-label="Sound: what it does"></button>
+        </div>
+        <div class="layer" style="--x:18.4%;--y:35.1%;--w:61.7%;--h:20.2%">
+          <img src="/media/sdm-type.png" alt="">
+          <button type="button" class="hit" data-box="type" aria-label="Words: what it says"></button>
+        </div>
+        <div class="layer" style="--x:20.4%;--y:16.9%;--w:52%;--h:24.5%">
+          <img src="/media/sdm-motion.png" alt="">
+          <button type="button" class="hit" data-box="motion" aria-label="Motion: what it senses"></button>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div id="blocks" aria-label="What this machine is made of"></div>
+  <form id="make-bar">
+    <p id="make-hint" role="status"></p>
+    <div class="row">
+      <input id="make-name" maxlength="24" placeholder="Name it" aria-label="Machine name" autocomplete="off">
+      <button id="make-go" type="submit" class="primary" disabled>Make it</button>
+      <button id="see-machines" type="button">Lab</button>
+    </div>
+  </form>
+</section>
 
-  <section id="controls">
-    <h2 id="machine-name"></h2>
-    <p id="help"></p>
-    <p id="status" role="status"></p>
-    <p id="readout" hidden>Reading: <output id="reading">0</output></p>
-    <p class="row">
-      <button id="start" type="button" class="primary">Start</button>
-      <button id="simulate" type="button">Simulate</button>
-    </p>
-  </section>
-</main>
+<!-- Screen 2: every machine as a drawing; tap one to see what it is and to play it -->
+<section id="grid-screen" hidden>
+  <ul id="grid"></ul>
+</section>
 
-<dialog id="builder">
-  <h2>Make your own</h2>
-
-  <label>Name <input id="b-name" maxlength="24" placeholder="My machine"></label>
-
-  <p>Draw its body <small>(optional)</small></p>
-  <canvas id="pad" width="280" height="280"></canvas>
-  <p><button id="b-clear" type="button">Clear</button></p>
-
-  <label>Sensor <select id="b-sensor"></select></label>
-  <label>Action <select id="b-action"></select></label>
-  <label id="b-text-row" hidden>Words <input id="b-text" maxlength="30" placeholder="Hello!"></label>
-
+<!-- what a tapped machine is, and where you play it -->
+<dialog id="dlg-machine">
+  <div class="m-stage">
+    <div id="m-body" class="body" role="img"><div id="m-art"></div></div>
+    <div id="m-bubble" class="bubble" hidden></div>
+  </div>
+  <h2 id="m-name"></h2>
+  <p id="m-detail"><small></small></p>
+  <p id="m-status" role="status"></p>
+  <output id="m-reading" hidden></output>
+  <div class="row">
+    <button id="m-start" type="button">Start</button>
+    <button id="m-sim" type="button">Simulate</button>
+  </div>
+  <details id="m-setup">
+    <summary>See set-up</summary>
+    <dl id="m-setup-list"></dl>
+  </details>
   <menu>
-    <button id="b-save" type="button" class="primary">Save</button>
-    <button id="b-cancel" type="button">Cancel</button>
+    <button id="m-delete" type="button">Delete</button>
+    <button id="m-share" type="button" disabled>Share</button>
+    <button id="m-close" type="button" class="primary">Close</button>
   </menu>
+</dialog>
+
+<!-- someone sent you a machine -->
+<dialog id="dlg-import">
+  <div class="m-stage"><div id="i-body" class="body" role="img"></div></div>
+  <h2 id="i-name"></h2>
+  <p id="i-detail"><small></small></p>
+  <p id="i-note"></p>
+  <menu>
+    <button id="i-no" type="button">No thanks</button>
+    <button id="i-yes" type="button" class="primary">Add to my lab</button>
+  </menu>
+</dialog>
+
+<!-- one small editor per box -->
+<dialog id="dlg-motion">
+  <form method="dialog">
+    <h2>Motion</h2>
+    <p>What should your machine sense?</p>
+    <div id="sensor-options" class="options"></div>
+    <menu><button class="primary">Done</button></menu>
+  </form>
+</dialog>
+
+<dialog id="dlg-sound">
+  <form method="dialog">
+    <h2>Sound</h2>
+    <p>What should it do when it feels that?</p>
+    <div id="action-options" class="options"></div>
+    <menu><button class="primary">Done</button></menu>
+  </form>
+</dialog>
+
+<dialog id="dlg-type">
+  <form method="dialog">
+    <h2>Words</h2>
+    <label>What does it say? <input id="e-text" maxlength="30" placeholder="Hello!"></label>
+    <label>Then open <select id="e-open"></select></label>
+    <label id="e-url-row" hidden>Link <input id="e-url" type="text" inputmode="url" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="example.com or tel:+31…"></label>
+    <p id="e-url-hint" role="status"><small></small></p>
+    <p><small>A phone may ask you to tap before an app opens.</small></p>
+    <menu><button class="primary">Done</button></menu>
+  </form>
+</dialog>
+
+<dialog id="dlg-param">
+  <form method="dialog">
+    <h2>Tune it</h2>
+    <p id="tune-intro"></p>
+    <div id="tune-rows"></div>
+    <menu>
+      <button id="tune-reset" type="button">Reset</button>
+      <button class="primary">Done</button>
+    </menu>
+  </form>
+</dialog>
+
+<dialog id="dlg-customize">
+  <form method="dialog">
+    <h2>Look</h2>
+    <p>Draw its body <small>(optional)</small></p>
+    <canvas id="pad" width="280" height="280"></canvas>
+    <p><button id="e-clear" type="button">Clear</button></p>
+    <menu><button class="primary">Done</button></menu>
+  </form>
 </dialog>
 
 <script type="module" src="/src/main.js"></script>

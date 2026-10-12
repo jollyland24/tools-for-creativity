@@ -19,7 +19,7 @@ export async function requestPermission() {
   return (await DeviceMotionEvent.requestPermission()) === "granted";
 }
 
-export function start({ onSample, onDrop }) {
+export function start({ onSample, onDrop, freefallMinMs = FREEFALL_MIN_MS, impactMin = IMPACT_MIN }) {
   stop();
 
   let freefallSince = null;
@@ -36,7 +36,7 @@ export function start({ onSample, onDrop }) {
 
     if (magnitude < FREEFALL_MAX) {
       freefallSince ??= now;
-      if (now - freefallSince >= FREEFALL_MIN_MS) fellLongEnough = true;
+      if (now - freefallSince >= freefallMinMs) fellLongEnough = true;
       freefallEndedAt = now;
       return;
     }
@@ -46,7 +46,7 @@ export function start({ onSample, onDrop }) {
 
     if (now - freefallEndedAt > IMPACT_WINDOW_MS) {
       fellLongEnough = false;
-    } else if (magnitude > IMPACT_MIN) {
+    } else if (magnitude > impactMin) {
       fellLongEnough = false;
       onDrop();
     }
