@@ -80,7 +80,6 @@ const BOXES = {
   motion: { dialog: $("dlg-motion"), done: () => draft.sensor !== null },
   sound: { dialog: $("dlg-sound"), done: () => draft.action !== null },
   type: { dialog: $("dlg-type"), done: () => draft.text !== "" || draft.url !== "" },
-  param: { dialog: $("dlg-param"), done: () => Object.keys(draft.params).length > 0 },
   customize: { dialog: $("dlg-customize"), done: () => pad.hasInk() },
 };
 
@@ -196,7 +195,6 @@ $("e-clear").addEventListener("click", () => pad.clear());
 document.querySelector(".cover-art").addEventListener("click", (event) => {
   const box = event.target.closest(".hit")?.dataset.box;
   if (!box) return;
-  if (box === "param") renderTune();
   BOXES[box].dialog.showModal();
 });
 for (const { dialog } of Object.values(BOXES)) dialog.addEventListener("close", refresh); // the pad has no events of its own
