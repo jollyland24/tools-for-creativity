@@ -68,7 +68,7 @@ export async function unpack(code) {
 
 // only what makes a machine: no id, so an imported one always gets a fresh id
 export function shareLink(machine) {
-  const { name, sensor, action, text, url, params, body } = machine;
-  return pack({ name, sensor, action, text, url, params, body })
+  const { name, sensor, action, text, url, sound, params, body } = machine;
+  return pack({ name, sensor, action, text, url, sound, params, body })
     .then((code) => `${location.href.split("#")[0]}#add=${code}`);
 }

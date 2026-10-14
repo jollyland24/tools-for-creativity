@@ -1,6 +1,7 @@
 // A machine = a body + a sensor + an action. This file is the data; main.js runs it.
 
 import * as sensors from "./sensors.js";
+import { MAX_CLIP_CHARS } from "./audio.js";
 
 export const SENSORS = {
   drop: {
@@ -63,6 +64,7 @@ export const SENSORS = {
 export const ACTIONS = {
   fall: { name: "Fall", then: "falls down", presetOnly: true },
   drum: { name: "Drum hit", then: "plays a drum" },
+  recording: { name: "Your own sound", then: "plays the sound you recorded" },
   beep: { name: "Note", then: "plays a note (higher = more)" },
   vibrate: { name: "Vibrate", then: "buzzes (Android only)" },
   text: { name: "No sound", then: "stays quiet (its words and link still happen)" },
@@ -75,6 +77,11 @@ export const ACTIONS = {
 // These schemes could run code in the page or read files, so they never get through.
 const APP_SCHEMES = ["mailto", "tel", "sms", "facetime", "facetime-audio"];
 const BLOCKED_SCHEMES = ["javascript", "data", "vbscript", "file", "blob", "about", "view-source", "ws", "wss", "ftp"];
+
+// A recorded sound is only base64 text of limited length (see audio.js). Returns it, or "" if it isn't one.
+export function cleanSound(raw) {
+  return typeof raw === "string" && raw.length <= MAX_CLIP_CHARS && /^[A-Za-z0-9+/]+={0,2}$/.test(raw) ? raw : "";
+}
 
 // Returns the cleaned link, or "" if it isn't something we will open.
 export function cleanUrl(raw) {
@@ -155,6 +162,8 @@ export function sanitizeMachine(raw) {
   const text = typeof raw.text === "string" ? raw.text.trim().slice(0, 30) : "";
   const url = cleanUrl(typeof raw.url === "string" ? raw.url : "");
   if (action === "text" && !text && !url) return null; // it would do nothing at all
+  const sound = action === "recording" ? cleanSound(raw.sound) : "";
+  if (action === "recording" && !sound) return null; // nothing to play
 
   const params = {};
   for (const knob of SENSORS[sensor].params) {
@@ -171,6 +180,7 @@ export function sanitizeMachine(raw) {
     action,
     text,
     url,
+    sound,
     params,
     body: typeof raw.body === "string" && raw.body.length <= 20_000 && SAFE_PATH.test(raw.body) ? raw.body : null,
   };
