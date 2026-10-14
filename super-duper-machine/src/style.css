@@ -338,6 +338,7 @@ dialog menu { display: flex; gap: 8px; padding: 0; margin: 12px 0 0; }
 #e-url-hint { min-height: 1.3em; margin: 0; }
 
 .options { display: grid; gap: 6px; }
+#recorder { margin-top: 10px; text-align: center; }
 .option {
   display: flex;
   align-items: center;

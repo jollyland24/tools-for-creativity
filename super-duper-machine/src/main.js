@@ -1,5 +1,5 @@
 import * as audio from "./audio.js";
-import { SENSORS, ACTIONS, APPS, PRESETS, bodyMarkup, cleanUrl, isWebLink, linkLabel, appFor, sanitizeMachine } from "./machines.js";
+import { SENSORS, ACTIONS, APPS, PRESETS, bodyMarkup, cleanSound, cleanUrl, isWebLink, linkLabel, appFor, sanitizeMachine } from "./machines.js";
 import { shareLink, unpack } from "./share.js";
 import { createPad } from "./draw.js";
 
@@ -41,7 +41,8 @@ function upgrade({ sensitivity, ...m }) {
 
 function isValid(m) {
   return m && typeof m.id === "string" && typeof m.name === "string"
-    && SENSORS[m.sensor] && ACTIONS[m.action] && !ACTIONS[m.action].presetOnly;
+    && SENSORS[m.sensor] && ACTIONS[m.action] && !ACTIONS[m.action].presetOnly
+    && (m.action !== "recording" || cleanSound(m.sound) !== "");
 }
 
 function persist() {
@@ -73,12 +74,12 @@ $("see-machines").addEventListener("click", () => { location.hash = "machines"; 
 // ---------- screen 1: the boxes ----------
 
 // What the user has picked so far. A box shows a tick once its part is set.
-const draft = { sensor: null, action: null, text: "", url: "", params: {} }; // params: only the knobs that were moved
+const draft = { sensor: null, action: null, sound: "", text: "", url: "", params: {} }; // params: only the knobs that were moved
 const pad = createPad($("pad"));
 
 const BOXES = {
   motion: { dialog: $("dlg-motion"), done: () => draft.sensor !== null },
-  sound: { dialog: $("dlg-sound"), done: () => draft.action !== null },
+  sound: { dialog: $("dlg-sound"), done: () => draft.action !== null && (draft.action !== "recording" || draft.sound !== "") },
   type: { dialog: $("dlg-type"), done: () => draft.text !== "" || draft.url !== "" },
   customize: { dialog: $("dlg-customize"), done: () => pad.hasInk() },
 };
@@ -115,9 +116,63 @@ fillOptions(
 fillOptions(
   $("action-options"),
   "action",
-  Object.entries(ACTIONS).filter(([, a]) => !a.presetOnly).map(([key, a]) => [key, a.name, a.then]),
-  (value) => { draft.action = value; },
+  Object.entries(ACTIONS)
+    .filter(([key, a]) => !a.presetOnly && (key !== "recording" || audio.canRecord)) // no mic, no recording
+    .map(([key, a]) => [key, a.name, a.then]),
+  (value) => { draft.action = value; renderRecorder(); },
 );
+
+// "Your own sound": record it right in the Sound box, and hear it back
+let recording = null; // the take in progress: { stop, clip }
+
+function renderRecorder() {
+  $("recorder").hidden = draft.action !== "recording";
+  $("rec-go").textContent = recording ? "Stop" : draft.sound ? "Record again" : "Record";
+  $("rec-play").hidden = draft.sound === "" || recording !== null;
+}
+
+function recorderSays(text) {
+  $("rec-status").firstChild.textContent = text;
+}
+
+$("rec-go").addEventListener("click", async () => {
+  if (recording) {
+    recording.stop();
+    return;
+  }
+  audio.unlock();
+  $("rec-go").disabled = true;
+  let take;
+  try {
+    take = await audio.startRecording();
+  } catch {
+    $("rec-go").disabled = false;
+    recorderSays("Couldn't use the microphone. Allow it in your browser, then try again.");
+    return;
+  }
+  recording = take;
+  $("rec-go").disabled = false;
+  recorderSays("Recording… make your sound, then tap Stop.");
+  renderRecorder();
+
+  let sound = null;
+  try {
+    sound = await take.clip;
+  } catch { /* can't read what was recorded: handled below like a silent take */ }
+  recording = null;
+  if (sound) draft.sound = sound;
+  recorderSays(sound
+    ? "Got it. Play it, or record again."
+    : "Didn't hear anything. Try again, a bit closer or louder.");
+  renderRecorder();
+  refresh();
+});
+
+$("rec-play").addEventListener("click", () => {
+  audio.unlock();
+  audio.playClip(draft.sound);
+});
+BOXES.sound.dialog.addEventListener("close", () => recording?.stop()); // also lets go of the mic
 
 $("e-text").addEventListener("input", (event) => {
   draft.text = event.target.value.trim();
@@ -203,6 +258,7 @@ function missingParts() {
   const missing = [];
   if (!draft.sensor) missing.push("motion");
   if (!draft.action) missing.push("sound");
+  if (draft.action === "recording" && !draft.sound) missing.push("a recorded sound");
   if (draft.action === "text" && !draft.text && !draft.url) missing.push("words or a link");
   return missing;
 }
@@ -220,7 +276,7 @@ function refresh() {
 }
 
 function resetDraft() {
-  Object.assign(draft, { sensor: null, action: null, text: "", url: "", params: {} });
+  Object.assign(draft, { sensor: null, action: null, sound: "", text: "", url: "", params: {} });
   for (const radio of document.querySelectorAll(".options input")) radio.checked = false;
   $("e-text").value = "";
   openSelect.value = "";
@@ -229,6 +285,8 @@ function resetDraft() {
   $("e-url-hint").firstChild.textContent = "";
   $("make-name").value = "";
   pad.clear();
+  recorderSays("");
+  renderRecorder();
   refresh();
 }
 
@@ -243,6 +301,7 @@ $("make-bar").addEventListener("submit", (event) => {
     action: draft.action,
     text: draft.text,
     url: draft.url,
+    sound: draft.action === "recording" ? draft.sound : "",
     params: { ...draft.params },
     body: pad.path(),
   };
@@ -494,6 +553,10 @@ function fire(machine, ui, { strength, position }) {
       break;
     case "drum":
       audio.drumHit(strength);
+      restart(ui.body, "bump");
+      break;
+    case "recording":
+      audio.playClip(machine.sound, strength);
       restart(ui.body, "bump");
       break;
     case "beep":
